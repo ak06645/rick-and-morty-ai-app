@@ -3,7 +3,7 @@
 import { useEffect, useState, FormEvent, KeyboardEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
+// import { Input } from '@/components/ui/input';
 
 export default function ChatPage() {
   const [prompt, setPrompt] = useState('');

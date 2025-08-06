@@ -1,11 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const auth = require('../../middleware/auth');
+const Character = require('../../models/Character');
 
 router.use(auth);
 
 router.post('/', async (req, res) => {
-  const { name, species, origin, traits } = req.body;
+  const { name, species, origin, traits, characterId } = req.body;
 
   const prompt = `
 Generate a unique and vivid backstory for a fictional character.
@@ -46,6 +47,15 @@ Keep it concise but imaginative, like a Rick and Morty episode setup.
 
     const data = await response.json();
     const backstory = data.choices?.[0]?.message?.content?.trim() || 'No backstory received.';
+
+    // Optional: save to DB if characterId is provided
+    if (characterId) {
+      await Character.findOneAndUpdate(
+        { _id: characterId, createdBy: req.user.userId },
+        { backstory }
+      );
+    }
+
     res.json({ backstory });
 
   } catch (error) {

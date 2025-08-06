@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { fetchWithAuth } from "@/lib/api";
+import BackstoryModal from '@/components/ui/BackstoryModal';
+import RelationshipModal from "@/components/ui/RelationshipModal";
+import CharacterCard from "@/components/ui/CharacterCard";
 
 interface Character {
   id: number;
@@ -12,14 +15,11 @@ interface Character {
   species: string;
   origin: { name: string };
   image: string;
+  backstory?: string;
 }
 
 interface Personality {
-  Openness: string;
-  Conscientiousness: string;
-  Extraversion: string;
-  Agreeableness: string;
-  Neuroticism: string;
+  [trait: string]: string;
 }
 
 export default function CharacterSearch() {
@@ -34,7 +34,8 @@ export default function CharacterSearch() {
   const [loadingPersonality, setLoadingPersonality] = useState<number | null>(null);
   const [loadingEpisodes, setLoadingEpisodes] = useState<number | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
-  const [relationships, setRelationships] = useState<string>('');
+  const [modalChar, setModalChar] = useState<Character | null>(null);
+  const [relationshipText, setRelationshipText] = useState<string | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -86,6 +87,12 @@ export default function CharacterSearch() {
       }
 
       setResults(allResults);
+      const backstoryMap: Record<number, string> = {};
+      allResults.forEach(c => {
+        if (c.backstory) backstoryMap[c.id] = c.backstory;
+      });
+      setBackstories(backstoryMap);
+
     } catch (err: any) {
       console.error("Fetch error:", err);
       alert(err.message || "Failed to fetch characters");
@@ -100,6 +107,8 @@ export default function CharacterSearch() {
   };
 
   const getBackstory = async (char: Character) => {
+    const isCustom = typeof char.id === 'string';
+
     try {
       const { backstory } = await fetchWithAuth('/api/ai/backstory', {
         method: 'POST',
@@ -107,13 +116,33 @@ export default function CharacterSearch() {
           name: char.name,
           species: char.species,
           origin: char.origin.name,
-          traits: ''
+          traits: '',
+          characterId: isCustom ? char.id : undefined,
         }),
       });
+
       setBackstories(prev => ({ ...prev, [char.id]: backstory }));
-      alert(`Backstory for ${char.name}:\n\n${backstory}`);
+      setModalChar({ ...char, backstory });
+
     } catch {
       alert('Failed to generate backstory');
+    }
+  };
+
+  const deleteBackstory = async (char: Character) => {
+    const isCustom = typeof char.id === 'string';
+    if (!isCustom) return alert("Only custom characters can have deletable backstories.");
+
+    try {
+      await fetchWithAuth(`/api/characters/${char.id}/backstory`, { method: 'DELETE' });
+      setBackstories(prev => {
+        const copy = { ...prev };
+        delete copy[char.id];
+        return copy;
+      });
+      setModalChar(null);
+    } catch {
+      alert('Failed to delete backstory');
     }
   };
 
@@ -164,8 +193,7 @@ export default function CharacterSearch() {
         method: 'POST',
         body: JSON.stringify({ characters: selectedChars }),
       });
-      setRelationships(relationship);
-      alert(`🤝 Suggested Relationship:\n\n${relationship}`);
+      setRelationshipText(relationship);
     } catch {
       alert("Failed to predict relationship");
     }
@@ -198,67 +226,54 @@ export default function CharacterSearch() {
       {results.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-6">
           {results.map((char) => (
-            <div
+            <CharacterCard
               key={char.id}
-              onClick={() => toggleSelect(char.id)}
-              className={`border rounded-xl p-4 shadow space-y-2 cursor-pointer ${
-                selectedIds.has(char.id) ? 'ring-2 ring-blue-500' : ''
-              }`}
-            >
-              <img
-                src={char.image}
-                alt={char.name}
-                className="rounded mb-2 w-full object-cover"
-              />
-              <h2 className="text-xl font-semibold">{char.name}</h2>
-              <p>Species: {char.species}</p>
-              <p>Origin: {char.origin.name}</p>
-
-              <div className="flex flex-col gap-2">
-                <Button onClick={(e) => { e.stopPropagation(); getBackstory(char); }}>
-                  Generate Backstory
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={(e) => { e.stopPropagation(); getPersonality(char); }}
-                  disabled={loadingPersonality === char.id}
-                >
-                  {loadingPersonality === char.id ? 'Analyzing...' : 'Analyze Personality'}
-                </Button>
-                <Button
-                  variant="secondary"
-                  onClick={(e) => { e.stopPropagation(); getEpisodes(char); }}
-                  disabled={loadingEpisodes === char.id}
-                >
-                  {loadingEpisodes === char.id ? 'Recommending...' : 'Recommend Episodes'}
-                </Button>
-              </div>
-
-              {personalities[char.id] && (
-                <div className="mt-3 p-3 bg-gray-100 rounded text-sm space-y-1">
-                  <p className="font-semibold">Personality Profile:</p>
-                  {Object.entries(personalities[char.id]).map(([trait, value]) => (
-                    <p key={trait}>
-                      <strong>{trait}:</strong> {value}
-                    </p>
-                  ))}
-                </div>
-              )}
-
-              {recommendedEpisodes[char.id] && (
-                <div className="mt-3 p-3 bg-yellow-50 border-l-4 border-yellow-400 rounded text-sm space-y-2">
-                  <p className="font-semibold">Recommended Episodes:</p>
-                  {recommendedEpisodes[char.id].map((ep, idx) => (
-                    <div key={idx}>
-                      <p>📺 <strong>{ep.title}</strong> ({ep.episode})</p>
-                      <p className="text-xs italic text-gray-600">— {ep.reason}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+              character={char}
+              selected={selectedIds.has(char.id)}
+              onSelect={() => toggleSelect(char.id)}
+              backstory={backstories[char.id]}
+              personality={personalities[char.id]}
+              episodes={recommendedEpisodes[char.id]}
+              onViewBackstory={() =>
+                backstories[char.id]
+                  ? setModalChar({ ...char, backstory: backstories[char.id] })
+                  : getBackstory(char)
+              }
+              onAnalyzePersonality={() => getPersonality(char)}
+              onRecommendEpisodes={() => getEpisodes(char)}
+              loadingPersonality={loadingPersonality === char.id}
+              loadingEpisodes={loadingEpisodes === char.id}
+            />
           ))}
         </div>
+      )}
+
+      {modalChar && (
+        <BackstoryModal
+          open={!!modalChar}
+          onClose={() => setModalChar(null)}
+          name={modalChar.name}
+          backstory={modalChar.backstory || ''}
+          isCustom={typeof modalChar.id === 'string'}
+          onDelete={
+            typeof modalChar.id === 'string'
+              ? () => deleteBackstory(modalChar)
+              : undefined
+          }
+          onRegenerate={
+            typeof modalChar.id !== 'string'
+              ? () => getBackstory(modalChar)
+              : undefined
+          }
+        />
+      )}
+
+      {relationshipText && (
+        <RelationshipModal
+          open={!!relationshipText}
+          onClose={() => setRelationshipText(null)}
+          relationship={relationshipText}
+        />
       )}
     </div>
   );

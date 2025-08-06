@@ -15,7 +15,6 @@ export default function NewCharacterPage() {
     gender: '',
     origin: '',
     image: '',
-    backstory: ''
   });
 
   const [useUpload, setUseUpload] = useState(false);
@@ -42,11 +41,10 @@ export default function NewCharacterPage() {
     try {
       await fetchWithAuth('/api/characters', {
         method: 'POST',
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form }),
       });
       router.push('/custom');
-    } catch (err) {
-      console.error(err);
+    } catch {
       alert('Failed to create character');
     }
   };
@@ -56,7 +54,7 @@ export default function NewCharacterPage() {
       <h1 className="text-2xl font-bold">Add Custom Character</h1>
 
       {Object.entries(form).map(([key, value]) => {
-        if (key === 'image') return null; // handled separately
+        if (key === 'image') return null;
         return (
           <Input
             key={key}

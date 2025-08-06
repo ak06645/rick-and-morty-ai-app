@@ -5,54 +5,34 @@ import { useRouter, useParams } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { fetchWithAuth } from '@/lib/api';
-
-interface CharacterForm {
-  name: string;
-  species: string;
-  status: string;
-  gender: string;
-  origin: string;
-  image: string;
-  backstory: string;
-}
+import BackstoryModal from '@/components/ui/BackstoryModal';
 
 export default function EditCharacterPage() {
   const router = useRouter();
   const params = useParams();
   const characterId = params?.id as string;
 
-  const [form, setForm] = useState<CharacterForm>({
+  const [form, setForm] = useState({
     name: '',
     species: '',
     status: '',
     gender: '',
     origin: '',
     image: '',
-    backstory: '',
   });
 
+  const [backstory, setBackstory] = useState('');
+  const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Load character data
   useEffect(() => {
     const loadCharacter = async () => {
       try {
         const data = await fetchWithAuth(`/api/characters/${characterId}`);
-
-        // Destructure only the fields we want
-        const {
-          name = '',
-          species = '',
-          status = '',
-          gender = '',
-          origin = '',
-          image = '',
-          backstory = '',
-        } = data;
-
-        setForm({ name, species, status, gender, origin, image, backstory });
+        const { name, species, status, gender, origin, image, backstory } = data;
+        setForm({ name, species, status, gender, origin, image });
+        setBackstory(backstory || '');
       } catch (err) {
-        console.error('Failed to load character:', err);
         alert('Character not found');
         router.push('/custom');
       } finally {
@@ -71,12 +51,40 @@ export default function EditCharacterPage() {
     try {
       await fetchWithAuth(`/api/characters/${characterId}`, {
         method: 'PUT',
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form }),
       });
       router.push('/custom');
-    } catch (err) {
-      console.error('Failed to update character:', err);
+    } catch {
       alert('Failed to update character');
+    }
+  };
+
+  const generateBackstory = async () => {
+    try {
+      const { backstory: generated } = await fetchWithAuth('/api/ai/backstory', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: form.name,
+          species: form.species,
+          origin: form.origin,
+          traits: '',
+          characterId,
+        }),
+      });
+      setBackstory(generated);
+      setShowModal(true);
+    } catch {
+      alert("Failed to generate backstory");
+    }
+  };
+
+  const deleteBackstory = async () => {
+    try {
+      await fetchWithAuth(`/api/characters/${characterId}/backstory`, { method: 'DELETE' });
+      setBackstory('');
+      setShowModal(false);
+    } catch {
+      alert("Failed to delete backstory");
     }
   };
 
@@ -96,9 +104,29 @@ export default function EditCharacterPage() {
         />
       ))}
 
+      {backstory ? (
+        <Button variant="default" onClick={() => setShowModal(true)}>
+          View Backstory
+        </Button>
+      ) : (
+        <Button variant="default" onClick={generateBackstory}>
+          Generate Backstory
+        </Button>
+      )}
+
       <Button onClick={handleSubmit} className="w-full">
         Save Changes
       </Button>
+
+      <BackstoryModal
+        open={showModal}
+        onClose={() => setShowModal(false)}
+        name={form.name}
+        backstory={backstory}
+        isCustom={true}
+        onDelete={deleteBackstory}
+        onRegenerate={generateBackstory}
+      />
     </div>
   );
 }
