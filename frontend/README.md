@@ -132,3 +132,16 @@ This frontend relies on:
 * **OpenRouter API key** configured in backend `.env`
 * **CORS allowed from `http://localhost:3000`**
 
+## API Proxy Setup
+
+The frontend uses a proxy to connect to the backend:
+
+```ts
+// frontend/next.config.ts
+rewrites: [
+  {
+    source: "/api/:path*",
+    destination: "http://localhost:5000/api/:path*"
+  }
+]
+```
