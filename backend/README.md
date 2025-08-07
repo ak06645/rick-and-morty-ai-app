@@ -59,15 +59,43 @@ PORT=5000
 MONGO_URI=mongodb://localhost:27017/rickmortyai
 JWT_SECRET=your_jwt_secret
 
-# OpenRouter API config
+** OpenRouter API config
 OPENROUTER_API_URL=https://openrouter.ai/api/v1/chat/completions
 OPENROUTER_MODEL=openai/gpt-oss-20b:free
 OPENROUTER_API_KEY=your_openrouter_api_key
 
-# CORS origin
+**CORS origin
 FRONTEND_URL=http://localhost:3000
 
+# API Endpoints
 
+## Auth
 
-## 📁 Project Structure
+| Method | Endpoint             | Description          |
+|--------|----------------------|----------------------|
+| POST   | `/api/auth/register` | Register a user      |
+| POST   | `/api/auth/login`    | Login and get JWT    |
+
+## Characters
+
+| Method | Endpoint                              | Description                        |
+|--------|---------------------------------------|------------------------------------|
+| GET    | `/api/characters`                     | List all user's characters         |
+| POST   | `/api/characters`                     | Create a new character             |
+| GET    | `/api/characters/:id`                 | Get character by ID                |
+| PUT    | `/api/characters/:id`                 | Update character                   |
+| DELETE | `/api/characters/:id`                 | Delete character                   |
+| GET    | `/api/characters/search`              | Search custom + R&M API            |
+| PATCH  | `/api/characters/:id/backstory`       | Update backstory                   |
+| DELETE | `/api/characters/:id/backstory`       | Delete backstory                   |
+
+## AI Features
+
+| Method | Endpoint                          | Description                                |
+|--------|-----------------------------------|--------------------------------------------|
+| POST   | `/api/ai/backstory`               | Generate character backstory               |
+| POST   | `/api/ai/personality`             | Analyze personality (Big Five traits)      |
+| POST   | `/api/ai/episodes`                | Recommend Rick and Morty episodes          |
+| POST   | `/api/ai/relationships`           | Analyze character relationships            |
+| POST   | `/api/ai/chat`                    | Chat as a Rick and Morty character         |
 
