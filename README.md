@@ -146,14 +146,97 @@ npm run dev
 
 ---
 
-## Screenshots *(optional)*
+## How to Use the Rick and Morty AI App
 
-> You can insert screenshots like this:
+Once the app is running at [http://localhost:3000](http://localhost:3000), here’s how users can interact with it:
 
+---
+
+### 1. Register & Login
+
+* Go to `/register` to create a new account.
+* Then go to `/login` and log in.
+* A token is stored in your browser to access protected features.
+
+---
+
+### 2. Search Characters
+
+* Navigate to `/characters`.
+* Enter a name (e.g., `Morty`) or species (e.g., `Alien`) in the search bar.
+* Results are fetched from:
+
+  * The official Rick and Morty API
+  * Your own custom characters (if any)
+
+---
+
+### 3. Add Custom Characters
+
+* Go to `/custom`.
+* Click **“+ Add New Character”**.
+* Fill in details like name, species, gender, origin, and image (URL or file upload).
+* Click **“Create”** — your character is now saved!
+
+---
+
+### 4. Generate Backstories
+
+* From `/characters` or `/custom`, view a character card.
+* Click **“Generate Backstory”** (for custom or API characters).
+* View a vivid AI-generated story in a modal.
+* You can regenerate (API) or delete (custom) backstories anytime.
+
+---
+
+### 5. Personality Analysis
+
+* After generating a backstory, click **“Analyze Personality”**.
+* The app uses AI to give a Big Five trait profile (Openness, Agreeableness, etc.).
+
+---
+
+### 6. Episode Suggestions
+
+* With a backstory in place, click **“Recommend Episodes”**.
+* The app recommends 2–3 Rick and Morty episodes that match your character's vibe.
+
+---
+
+### 7. Chat with Characters
+
+* Go to `/chat`.
+* Select a character from the dropdown (auto-loaded from the Rick and Morty API).
+* Type a question and click **“Ask \[Character]”**.
+* The character responds in their unique voice using AI.
+
+---
+
+### 8. Analyze Relationships
+
+* On `/characters`, **select two or more characters**.
+* Click **“Generate Relationship”**.
+* You'll get an AI-generated summary of their likely relationship (e.g., rivals, lovers, allies).
+
+---
+
+## Tips
+
+* You can combine **official characters** and **your custom ones** in searches and interactions.
+* Use the **custom character editor** (`/custom/[id]`) to update traits and regenerate content.
+
+---
+
+## Sample Login Credentials (Optional for Demo)
+
+You can provide dummy credentials for reviewers:
+
+```text
+Username: demo_user
+Password: demo123
 ```
-![Character Search](./screenshots/search.png)
-![Backstory Modal](./screenshots/backstory.png)
-```
+
+(Only if you seed this user in the DB)
 
 ---
 
