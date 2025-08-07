@@ -3,18 +3,52 @@
 import { useEffect, useState, FormEvent, KeyboardEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-// import { Input } from '@/components/ui/input';
+
+interface Character {
+  id: number;
+  name: string;
+}
 
 export default function ChatPage() {
   const [prompt, setPrompt] = useState('');
-  const [character, setCharacter] = useState('Rick Sanchez');
+  const [character, setCharacter] = useState('');
   const [response, setResponse] = useState('');
   const [loading, setLoading] = useState(false);
   const [token, setToken] = useState<string | null>(null);
+  const [characters, setCharacters] = useState<Character[]>([]);
 
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
     setToken(storedToken);
+
+    const fetchCharacters = async () => {
+      let allCharacters: Character[] = [];
+      let page = 1;
+      let hasNextPage = true;
+
+      try {
+        while (hasNextPage) {
+          const res = await fetch(`https://rickandmortyapi.com/api/character?page=${page}`);
+          const data = await res.json();
+          const pageCharacters = data.results.map((char: any) => ({
+            id: char.id,
+            name: char.name,
+          }));
+
+          allCharacters = [...allCharacters, ...pageCharacters];
+
+          hasNextPage = !!data.info?.next;
+          page++;
+        }
+
+        setCharacters(allCharacters);
+        setCharacter(allCharacters[0]?.name || '');
+      } catch (err) {
+        console.error('Failed to fetch characters:', err);
+      }
+    };
+
+    fetchCharacters();
   }, []);
 
   const handleSubmit = async (e: FormEvent) => {
@@ -71,13 +105,11 @@ export default function ChatPage() {
             onChange={(e) => setCharacter(e.target.value)}
             className="w-full p-2 border rounded"
           >
-            <option>Rick Sanchez</option>
-            <option>Morty Smith</option>
-            <option>Summer Smith</option>
-            <option>Beth Smith</option>
-            <option>Jerry Smith</option>
-            <option>Birdperson</option>
-            <option>Mr. Meeseeks</option>
+            {characters.map((char) => (
+              <option key={char.id} value={char.name}>
+                {char.name}
+              </option>
+            ))}
           </select>
         </div>
 

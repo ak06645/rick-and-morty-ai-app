@@ -6,6 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { fetchWithAuth } from '@/lib/api';
 
+const STATUS_OPTIONS = ['Alive', 'Dead', 'unknown'];
+const GENDER_OPTIONS = ['Female', 'Male', 'Genderless', 'unknown'];
+
 export default function NewCharacterPage() {
   const router = useRouter();
   const [form, setForm] = useState({
@@ -20,7 +23,7 @@ export default function NewCharacterPage() {
   const [useUpload, setUseUpload] = useState(false);
   const [imagePreview, setImagePreview] = useState('');
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
@@ -53,19 +56,63 @@ export default function NewCharacterPage() {
     <div className="space-y-4 max-w-md mx-auto">
       <h1 className="text-2xl font-bold">Add Custom Character</h1>
 
-      {Object.entries(form).map(([key, value]) => {
-        if (key === 'image') return null;
-        return (
-          <Input
-            key={key}
-            name={key}
-            placeholder={key.charAt(0).toUpperCase() + key.slice(1)}
-            value={value}
-            onChange={handleChange}
-          />
-        );
-      })}
+      {/* Name */}
+      <Input
+        name="name"
+        placeholder="Name"
+        value={form.name}
+        onChange={handleChange}
+      />
 
+      {/* Species */}
+      <Input
+        name="species"
+        placeholder="Species"
+        value={form.species}
+        onChange={handleChange}
+      />
+
+      {/* Status Dropdown */}
+      <div>
+        <label className="block font-medium mb-1">Status</label>
+        <select
+          name="status"
+          value={form.status}
+          onChange={handleChange}
+          className="w-full p-2 border rounded"
+        >
+          <option value="">Select Status</option>
+          {STATUS_OPTIONS.map(option => (
+            <option key={option} value={option}>{option}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Gender Dropdown */}
+      <div>
+        <label className="block font-medium mb-1">Gender</label>
+        <select
+          name="gender"
+          value={form.gender}
+          onChange={handleChange}
+          className="w-full p-2 border rounded"
+        >
+          <option value="">Select Gender</option>
+          {GENDER_OPTIONS.map(option => (
+            <option key={option} value={option}>{option}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Origin */}
+      <Input
+        name="origin"
+        placeholder="Origin"
+        value={form.origin}
+        onChange={handleChange}
+      />
+
+      {/* Image upload / URL */}
       <div>
         <label className="block font-medium mb-1">Image</label>
         <div className="flex items-center gap-4 mb-2">

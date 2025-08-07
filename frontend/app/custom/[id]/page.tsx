@@ -7,6 +7,9 @@ import { Button } from '@/components/ui/button';
 import { fetchWithAuth } from '@/lib/api';
 import BackstoryModal from '@/components/ui/BackstoryModal';
 
+const STATUS_OPTIONS = ['Alive', 'Dead', 'unknown'];
+const GENDER_OPTIONS = ['Female', 'Male', 'Genderless', 'unknown'];
+
 export default function EditCharacterPage() {
   const router = useRouter();
   const params = useParams();
@@ -43,7 +46,9 @@ export default function EditCharacterPage() {
     if (characterId) loadCharacter();
   }, [characterId, router]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
@@ -74,17 +79,19 @@ export default function EditCharacterPage() {
       setBackstory(generated);
       setShowModal(true);
     } catch {
-      alert("Failed to generate backstory");
+      alert('Failed to generate backstory');
     }
   };
 
   const deleteBackstory = async () => {
     try {
-      await fetchWithAuth(`/api/characters/${characterId}/backstory`, { method: 'DELETE' });
+      await fetchWithAuth(`/api/characters/${characterId}/backstory`, {
+        method: 'DELETE',
+      });
       setBackstory('');
       setShowModal(false);
     } catch {
-      alert("Failed to delete backstory");
+      alert('Failed to delete backstory');
     }
   };
 
@@ -94,16 +101,73 @@ export default function EditCharacterPage() {
     <div className="space-y-4 max-w-md mx-auto">
       <h1 className="text-2xl font-bold">Edit Character</h1>
 
-      {Object.entries(form).map(([key, value]) => (
-        <Input
-          key={key}
-          name={key}
-          placeholder={key.charAt(0).toUpperCase() + key.slice(1)}
-          value={value}
-          onChange={handleChange}
-        />
-      ))}
+      {/* Text inputs */}
+      <Input
+        name="name"
+        placeholder="Name"
+        value={form.name}
+        onChange={handleChange}
+      />
+      <Input
+        name="species"
+        placeholder="Species"
+        value={form.species}
+        onChange={handleChange}
+      />
 
+      {/* Status dropdown */}
+      <div>
+        <label className="block font-medium mb-1">Status</label>
+        <select
+          name="status"
+          value={form.status}
+          onChange={handleChange}
+          className="w-full p-2 border rounded"
+        >
+          <option value="">Select Status</option>
+          {STATUS_OPTIONS.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Gender dropdown */}
+      <div>
+        <label className="block font-medium mb-1">Gender</label>
+        <select
+          name="gender"
+          value={form.gender}
+          onChange={handleChange}
+          className="w-full p-2 border rounded"
+        >
+          <option value="">Select Gender</option>
+          {GENDER_OPTIONS.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Origin */}
+      <Input
+        name="origin"
+        placeholder="Origin"
+        value={form.origin}
+        onChange={handleChange}
+      />
+
+      {/* Image URL */}
+      <Input
+        name="image"
+        placeholder="Image URL"
+        value={form.image}
+        onChange={handleChange}
+      />
+
+      {/* Backstory section */}
       {backstory ? (
         <Button variant="default" onClick={() => setShowModal(true)}>
           View Backstory
